@@ -22,6 +22,7 @@ namespace MyParcelNL\Magento\Model\Quote;
 
 
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\ObjectManagerInterface;
 use MyParcelNL\Magento\Helper\Checkout;
 use MyParcelNL\Magento\Model\Checkout\Carrier;
 use MyParcelNL\Magento\Model\Sales\Repository\DeliveryRepository;
@@ -44,6 +45,7 @@ class SaveOrderBeforeSalesModelQuoteObserver implements ObserverInterface
      * @var array
      */
     private $parentMethods;
+    private $objectManager;
 
     /**
      * SaveOrderBeforeSalesModelQuoteObserver constructor.
@@ -51,14 +53,18 @@ class SaveOrderBeforeSalesModelQuoteObserver implements ObserverInterface
      * @param DeliveryRepository $delivery
      * @param MyParcelConsignmentRepository $consignmentRepository
      * @param Checkout $checkoutHelper
+     * @param ObjectManagerInterface $objectManager
      */
     public function __construct(
         DeliveryRepository $delivery,
         MyParcelConsignmentRepository $consignmentRepository,
-        Checkout $checkoutHelper
+        Checkout $checkoutHelper,
+        ObjectManagerInterface $objectManager
     ) {
         $this->delivery = $delivery;
         $this->consignmentRepository = $consignmentRepository;
+        $this->objectManager = $objectManager;
+
 
         $this->parentMethods = explode(',', $checkoutHelper->getCheckoutConfig('general/shipping_methods'));
 
@@ -71,8 +77,13 @@ class SaveOrderBeforeSalesModelQuoteObserver implements ObserverInterface
      */
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
+
+        $order->setDeliveryType($quote->getDeliveryType());
+        $this->objectManager->get('Psr\Log\LoggerInterface')->debug('myparcel test2 ');
+
         /* @var \Magento\Quote\Model\Quote $quote */
         $quote = $observer->getEvent()->getData('quote');
+
         /* @var \Magento\Sales\Model\Order $order */
         $order = $observer->getEvent()->getData('order');
         $fullStreet = implode(' ', $order->getShippingAddress()->getStreet());
@@ -81,14 +92,20 @@ class SaveOrderBeforeSalesModelQuoteObserver implements ObserverInterface
             $order->setData(self::FIELD_TRACK_STATUS, __('⚠️&#160; Please check address'));
         }
 
+        $this->objectManager->get('Psr\Log\LoggerInterface')->debug('hier0', [$quote->hasData(self::FIELD_DELIVERY_OPTIONS)]);
+        $this->objectManager->get('Psr\Log\LoggerInterface')->debug('hier0.5', [$this->isMyParcelMethod($quote)]);
         if ($quote->hasData(self::FIELD_DELIVERY_OPTIONS) && $this->isMyParcelMethod($quote)) {
+            $this->objectManager->get('Psr\Log\LoggerInterface')->debug('hier0.7', [$quote->getData()]);
+            $this->objectManager->get('Psr\Log\LoggerInterface')->debug('hier1', [$quote->getData(self::FIELD_DELIVERY_OPTIONS)]);
             $jsonDeliveryOptions = $quote->getData(self::FIELD_DELIVERY_OPTIONS);
             $order->setData(self::FIELD_DELIVERY_OPTIONS, $jsonDeliveryOptions);
 
             $dropOffDay = $this->delivery->getDropOffDayFromJson($jsonDeliveryOptions);
+            $this->objectManager->get('Psr\Log\LoggerInterface')->debug('hier2', [$jsonDeliveryOptions]);
             $order->setData(self::FIELD_DROP_OFF_DAY, $dropOffDay);
         }
 
+        exit('asdf');
         return $this;
     }
 

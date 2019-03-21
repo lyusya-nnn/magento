@@ -9,9 +9,10 @@ define(
         'text!MyParcelNL_Magento/template/checkout/options.html',
         'text!MyParcelNL_Magento/css/checkout/options-dynamic.min.css',
         'MyParcelNL_Magento/js/lib/myparcel',
-        'Magento_Checkout/js/action/set-shipping-information'
+        'Magento_Checkout/js/action/set-shipping-information',
+        'uiRegistry'
     ],
-    function(mageUrl, uiComponent, quote, customer, checkoutData,jQuery, optionsHtml, cssDynamic, moment, setShippingInformationAction) {
+    function(mageUrl, uiComponent, quote, customer, checkoutData,jQuery, optionsHtml, cssDynamic, moment, setShippingInformationAction, registry) {
         'use strict';
 
         var  originalShippingRate, optionsContainer, isLoading, myparcel, delivery_options_input, myparcel_method_alias, myparcel_method_element, isLoadingAddress;
@@ -104,38 +105,30 @@ define(
         }
 
         function _setAddress() {
-            if (customer.isLoggedIn() &&
-                typeof quote !== 'undefined' &&
-                typeof quote.shippingAddress !== 'undefined' &&
-                typeof quote.shippingAddress._latestValue !== 'undefined' &&
-                typeof quote.shippingAddress._latestValue.street !== 'undefined' &&
-                typeof quote.shippingAddress._latestValue.street[0] !== 'undefined'
-            ) {
-                var street0 = quote.shippingAddress._latestValue.street[0];
-                if (typeof street0 === 'undefined') street0 = '';
-                var street1 = quote.shippingAddress._latestValue.street[1];
-                if (typeof street1 === 'undefined') street1 = '';
-                var street2 = quote.shippingAddress._latestValue.street[2];
-                if (typeof street2 === 'undefined') street2 = '';
-                var country = quote.shippingAddress._latestValue.countryId;
-                if (typeof country === 'undefined') country = '';
-                var postcode = quote.shippingAddress._latestValue.postcode;
-                if (typeof postcode === 'undefined') postcode = '';
-                var city = quote.shippingAddress._latestValue.postcode;
-                if (typeof city === 'undefined') city = '';
+            var street0 = registry.get('checkout.steps.shipping-step.shippingAddress.shipping-address-fieldset.street.0').get('value');
+            if (typeof street0 === 'undefined') {
+                street0 = '';
+            }
+            var street1 = registry.get('checkout.steps.shipping-step.shippingAddress.shipping-address-fieldset.street.1').get('value');
+            if (typeof street1 === 'undefined') {
+                street1 = '';
+            }
+            if (registry.get('checkout.steps.shipping-step.shippingAddress.shipping-address-fieldset.street.2')) {
+                var street2 = registry.get('checkout.steps.shipping-step.shippingAddress.shipping-address-fieldset.street.2').get('value');
             } else {
-                var street0 = jQuery("input[name='street[0]']").val();
-                if (typeof street0 === 'undefined') street0 = '';
-                var street1 = jQuery("input[name='street[1]']").val();
-                if (typeof street1 === 'undefined') street1 = '';
-                var street2 = jQuery("input[name='street[2]']").val();
-                if (typeof street2 === 'undefined') street2 = '';
-                var country = jQuery("select[name='country_id']").val();
-                if (typeof country === 'undefined') country = '';
-                var postcode = jQuery("input[name='postcode']").val();
-                if (typeof postcode === 'undefined') postcode = '';
-                var city = jQuery("input[name='city']").val();
-                if (typeof city === 'undefined') city = '';
+                var street2 = '';
+            }
+            var country = registry.get('checkout.steps.shipping-step.shippingAddress.shipping-address-fieldset.country_id').get('value');
+            if (typeof country === 'undefined') {
+                country = '';
+            }
+            var postcode = registry.get('checkout.steps.shipping-step.shippingAddress.shipping-address-fieldset.postcode').get('value');
+            if (typeof postcode === 'undefined') {
+                postcode = '';
+            }
+            var city = registry.get('checkout.steps.shipping-step.shippingAddress.shipping-address-fieldset.city').get('value');
+            if (typeof city === 'undefined') {
+                city = '';
             }
 
             window.mypa.address = [];
